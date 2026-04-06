@@ -124,3 +124,24 @@ This script is provided as a reproducible hydrological supplement.
 
 
 Feel free to open issues or contribute improvements.
+
+---
+
+## 📖 Citation
+
+If you use **WetFramework** in your research, please cite the published paper:
+
+```bibtex
+@article{liang2026wetframework,
+  title   = {WetFramework: A deep learning framework for coastal wetland boundary extraction and inundation frequency estimation},
+  author  = {Liang, Jintao and Zhang, Yong and Wang, Yi and Chen, Chao},
+  journal = {Journal of Hydrology},
+  volume  = {671},
+  pages   = {135273},
+  year    = {2026},
+  doi     = {10.1016/j.jhydrol.2026.135273}
+}
+```
+
+**DOI:** [10.1016/j.jhydrol.2026.135273](https://doi.org/10.1016/j.jhydrol.2026.135273)
+
