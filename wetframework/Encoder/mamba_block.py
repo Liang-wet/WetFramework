@@ -9,11 +9,16 @@ except:
 
 class MambaBlock(nn.Module):
     """
-    Mamba Block for WetFramework
+    Mamba Block
     -----------------------------------------------------------
-    Matches the design in Fig. 2(b) of the paper:
+    Wrapper structure aligned with the simplified figure:
 
-        LN → Mamba → SiLU → Linear → DropPath → Residual
+        LN → Mamba → DropPath → Residual
+
+    Notes:
+        - The official `Mamba` module already wraps the core Mamba block,
+          including the internal selective SSM and local convolution-related operations.
+        - This wrapper only keeps the outer pre-norm, stochastic depth, and residual connection.
 
     Input:
         x : [B, N, C]
@@ -21,24 +26,17 @@ class MambaBlock(nn.Module):
         x : [B, N, C]
     """
 
-    def __init__(self, dim, drop_path=0., dropout=0.):
+    def __init__(self, dim, drop_path=0.):
         super().__init__()
 
         self.norm = nn.LayerNorm(dim)
 
-        # Mamba SSM module (official)
         self.mamba = Mamba(
             d_model=dim,
             d_state=16,
             d_conv=4
         )
 
-        self.act = nn.SiLU()
-
-        # Output projection (same dimension)
-        self.proj = nn.Linear(dim, dim)
-
-        self.dropout = nn.Dropout(dropout)
         self.drop_path = DropPath(drop_path) if drop_path > 0 else nn.Identity()
 
     def forward(self, x):
@@ -47,34 +45,22 @@ class MambaBlock(nn.Module):
         """
         shortcut = x
 
-        # Pre-normalization
         x = self.norm(x)
-
-        # Mamba SSM
-        x = self.mamba(x)  # [B, N, C]
-
-        # Nonlinearity
-        x = self.act(x)
-
-        # Projection + dropout
-        x = self.proj(x)
-        x = self.dropout(x)
-
-        # Residual
+        x = self.mamba(x)
         x = shortcut + self.drop_path(x)
 
         return x
 
 
 class DropPath(nn.Module):
-    """ Standard DropPath (Stochastic Depth) """
+    """Standard DropPath (Stochastic Depth)."""
 
     def __init__(self, drop_prob=None):
         super().__init__()
-        self.drop_prob = drop_prob
+        self.drop_prob = drop_prob if drop_prob is not None else 0.0
 
     def forward(self, x):
-        if self.drop_prob == 0. or not self.training:
+        if self.drop_prob == 0.0 or not self.training:
             return x
 
         keep_prob = 1 - self.drop_prob
